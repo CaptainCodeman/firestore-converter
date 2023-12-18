@@ -1,0 +1,81 @@
+{
+	"name": "firestore-converter",
+	"description": "Share Firestore Data Converters between Client and Server Firebase SDK",
+	"version": "0.0.1",
+	"homepage": "https://captaincodeman.github.io/firestore-converter/",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/captaincodeman/firestore-converter.git"
+	},
+	"author": {
+		"name": "Simon Green",
+		"email": "simon@captaincodeman.com",
+		"url": "https://www.captaincodeman.com/"
+	},
+	"keywords": [
+		"firebase",
+		"firebase-admin",
+		"firestore",
+		"data",
+		"convert",
+		"converter",
+		"object model",
+		"database model",
+		"schema",
+		"transform",
+		"translate",
+		"server",
+		"client"
+	],
+	"license": "MIT",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build && npm run package",
+		"preview": "vite preview",
+		"package": "svelte-kit sync && tsup && publint",
+		"prepublishOnly": "npm run package",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./firebase": {
+			"types": "./dist/firebase/index.d.ts",
+			"import": "./dist/firebase/index.js"
+		},
+		"./firebase.server": {
+			"types": "./dist/firebase.server/index.d.ts",
+			"import": "./dist/firebase.server/index.js"
+		}
+	},
+	"files": [
+		"dist",
+		"!dist/**/*.test.*",
+		"!dist/**/*.spec.*"
+	],
+	"peerDependencies": {
+		"svelte": "^4.0.0"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "^3.0.0",
+		"@sveltejs/kit": "^2.0.0",
+		"@sveltejs/vite-plugin-svelte": "^3.0.0",
+		"@types/node": "^20.10.4",
+		"publint": "^0.2.6",
+		"svelte": "^4.2.7",
+		"svelte-check": "^3.6.0",
+		"tslib": "^2.4.1",
+		"tsup": "^8.0.1",
+		"typescript": "^5.0.0",
+		"vite": "^5.0.3"
+	},
+	"dependencies": {
+		"firebase": "^10.7.1",
+		"firebase-admin": "^12.0.0",
+		"uint8array-extras": "^1.0.0"
+	}
+}
