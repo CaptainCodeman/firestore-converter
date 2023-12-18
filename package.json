@@ -1,7 +1,7 @@
 {
 	"name": "firestore-converter",
 	"description": "Share Firestore Data Converters between Client and Server Firebase SDK",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"homepage": "https://captaincodeman.github.io/firestore-converter/",
 	"repository": {
 		"type": "git",
@@ -52,10 +52,18 @@
 			"import": "./dist/firebase.server/index.js"
 		}
 	},
+	"typesVersions": {
+		"*": {
+			"firebase": [
+				"./dist/firebase/index.d.ts"
+			],
+			"firebase.server": [
+				"./dist/firebase.server/index.d.ts"
+			]
+		}
+	},
 	"files": [
-		"dist",
-		"!dist/**/*.test.*",
-		"!dist/**/*.spec.*"
+		"dist"
 	],
 	"peerDependencies": {
 		"svelte": "^4.0.0"
