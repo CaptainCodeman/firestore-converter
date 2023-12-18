@@ -27,18 +27,15 @@ Install using your package manager of choice (which should really be `pnpm`):
 Import the types from the 'firestore-converter' package that will allow you to define you object model, DB model and converter:
 
 ```ts
-import type {
-  FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot,
-  Binary, Timestamp, Converter,
-} from 'firestore-converter'
+import type { FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, Binary, Timestamp, Converter } from 'firestore-converter'
 ```
 
 Some of these types are just to make it convenient and easy to migrate existing data converter code you may have and avoid having to decide whether you should be importing them from the `firebase/firestore` package or `firebase-admin/firestore`:
 
-* `FirestoreDataConverter`
-* `WithFieldValue`
-* `DocumentData`
-* `QueryDocumentSnapshot`
+- `FirestoreDataConverter`
+- `WithFieldValue`
+- `DocumentData`
+- `QueryDocumentSnapshot`
 
 The `Binary` type provides a consistent way to represent binary data in the database model instead of having to deal with `Buffer` (in the `firebase-admin` Server SDK) vs `Bytes` (in the `firebase` Client SDK).
 
@@ -73,7 +70,7 @@ export interface DBPerson {
 }
 ```
 
-### Converter Class
+### Data Converter Class
 
 Now we define our converter class. This will implement the `FirestoreDataConverter<Model, DBModel>` interface, and accept an instance of the `Converter` in the constructor. The `toFirtestore` method will convert from the in memory object model to the DB model, and the `fromFirestore` method in the opposite direction. Each can make use of the provided `Converter` instance methods to convert the appropriate fields.
 
@@ -100,6 +97,23 @@ export class PersonConverter implements FirestoreDataConverter<Person, DBPerson>
   }
 }
 ```
+
+### Converter Methods
+
+The `Converter` instance passed in to your Data Converter class provides the following methods all from the perspective of the Object Model. You'll typically be using the `from...` methods in the `toFirestore` method (**from** Object Model, to DB Model) and the `to...` methods in the `fromFirestore` method (**to** Object Model, from DB Model). Personally, I would have make the 'to' and 'from' being to and from the database formats, but the firebase SDKs already used this opposite naming so I've aligned with that to hopefully avoid confusion.
+
+| Method                                    | Description                                          |
+| ----------------------------------------- | ---------------------------------------------------- |
+| fromBase64String(value: string): Binary   | Store a Base64 encoded string as a binary field      |
+| fromUint8Array(value: Uint8Array): Binary | Store a typed `Uint8Array` as a binary field         |
+| fromHexString(value: string): Binary      | Store a hex encoded string as a binary field         |
+| fromString(value: string): Binary         | Store a unicode string as a binary field             |
+| fromDate(value: Date): Timestamp          | Store a JavaScript Date object as a Timestamp        |
+| toBase64String(value: Binary): string     | Convert a binary field to a Base64 encoded string    |
+| toUInt8Array(value: Binary): Uint8Array   | Convert a binary field to a typed `Uint8Array`       |
+| toHexString(value: Binary): string        | Convert a binary field to a hex encoded string       |
+| toString(value: Binary): string           | Convert from a binary field to a unicode string      |
+| toDate(value: Timestamp): Date            | Convert from a Timestamp to a JavaScript Date object |
 
 ### Firebase Clients
 
@@ -175,4 +189,4 @@ export async function getPeople() {
 
 ### Result
 
-We can now load an save data easily from both client and server, using a single definition of the data converter class.
+We can now load and save data easily from both client and server, using a single definition of the data converter class.
