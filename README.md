@@ -14,7 +14,7 @@ That's what this lib is intended to help with ...
 
 ## Usage
 
-The code examples show [SvelteKit](https://kit.svelte.dev/) features to reference environment variables, but the approach should be usable wit other web frameworks too. It also has a useful naming convention where anything ending in `.server` is automatically blocked from being accidentally referenced by, and bundled into, client-side code. We've used the same convention in our module naming to benefit from it.
+The code examples show [SvelteKit](https://kit.svelte.dev/) features to reference environment variables, but the approach should be usable with other web frameworks too. It also has a useful naming convention where anything ending in `.server` is automatically blocked from being accidentally referenced by, and bundled into, client-side code. We've used the same convention in our module naming to benefit from it.
 
 ### Installation
 
@@ -27,7 +27,10 @@ Install using your package manager of choice (which should really be `pnpm`):
 Import the types from the 'firestore-converter' package that will allow you to define you object model, DB model and converter:
 
 ```ts
-import type { FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, Binary, Timestamp, Converter } from 'firestore-converter'
+import type {
+  FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot,
+  Binary, Timestamp, Converter
+} from 'firestore-converter'
 ```
 
 Some of these types are just to make it convenient and easy to migrate existing data converter code you may have and avoid having to decide whether you should be importing them from the `firebase/firestore` package or `firebase-admin/firestore`:
@@ -45,7 +48,7 @@ Finally, the `Converter` interface provides access to several functions to trans
 
 ### Object Model and DB Model
 
-Using these types, we can define our object models (how data is represented to our app) and a corresponding DB model (how data is stored in Firestore). These don't _have_ to match 1:1, and you can even create rich interfaces to [handle schema versioning](https://www.captaincodeman.com/schema-versioning-with-google-firestore).
+Using these types, we can define our object models (how data is represented to our app) and a corresponding DB model (how data is stored in Firestore). These don't _have_ to match 1:1, and you can even utilize union types and migration function to [handle schema versioning](https://www.captaincodeman.com/schema-versioning-with-google-firestore).
 
 For this example though, we'll keep things simple to focus on the type conversions required:
 
@@ -98,30 +101,34 @@ export class PersonConverter implements FirestoreDataConverter<Person, DBPerson>
 }
 ```
 
+You don't _have_ to declare the DB Model though, you can just use the `DocumentData` type in it's place so you only need to define the in memory object model.
+
+Likewise you may not want to use the `WithFieldValue<Model>` in the `toFirestore` method which is only required if you'll be making use of [`FieldValue`](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.FieldValue) sentinel types, but require you to cast the model types as in the example above.
+
 ### Converter Methods
 
 The `Converter` instance passed in to your Data Converter class provides the following methods all from the perspective of the Object Model. You'll typically be using the `from...` methods in the `toFirestore` method (**from** Object Model, to DB Model) and the `to...` methods in the `fromFirestore` method (**to** Object Model, from DB Model). Personally, I would have make the 'to' and 'from' being to and from the database formats, but the firebase SDKs already used this opposite naming so I've aligned with that to hopefully avoid confusion.
 
-| Method                                    | Description                                          |
-| ----------------------------------------- | ---------------------------------------------------- |
-| fromBase64String(value: string): Binary   | Store a Base64 encoded string as a binary field      |
-| fromUint8Array(value: Uint8Array): Binary | Store a typed `Uint8Array` as a binary field         |
-| fromHexString(value: string): Binary      | Store a hex encoded string as a binary field         |
-| fromString(value: string): Binary         | Store a unicode string as a binary field             |
-| fromDate(value: Date): Timestamp          | Store a JavaScript Date object as a Timestamp        |
-| toBase64String(value: Binary): string     | Convert a binary field to a Base64 encoded string    |
-| toUInt8Array(value: Binary): Uint8Array   | Convert a binary field to a typed `Uint8Array`       |
-| toHexString(value: Binary): string        | Convert a binary field to a hex encoded string       |
-| toString(value: Binary): string           | Convert from a binary field to a unicode string      |
-| toDate(value: Timestamp): Date            | Convert from a Timestamp to a JavaScript Date object |
+| Method                                        | Description                                          |
+| --------------------------------------------- | ---------------------------------------------------- |
+| **fromBase64String**(value: string): Binary   | Store a Base64 encoded string as a binary field      |
+| **fromUint8Array**(value: Uint8Array): Binary | Store a typed `Uint8Array` as a binary field         |
+| **fromHexString**(value: string): Binary      | Store a hex encoded string as a binary field         |
+| **fromString**(value: string): Binary         | Store a unicode string as a binary field             |
+| **fromDate**(value: Date): Timestamp          | Store a JavaScript Date object as a Timestamp        |
+| **toBase64String**(value: Binary): string     | Convert a binary field to a Base64 encoded string    |
+| **toUInt8Array**(value: Binary): Uint8Array   | Convert a binary field to a typed `Uint8Array`       |
+| **toHexString**(value: Binary): string        | Convert a binary field to a hex encoded string       |
+| **toString**(value: Binary): string           | Convert from a binary field to a unicode string      |
+| **toDate**(value: Timestamp): Date            | Convert from a Timestamp to a JavaScript Date object |
 
 ### Firebase Clients
 
-The converter class we've defined can now be used from the Server or the Client SDK. This is done by importing the appropriate `converter` implementation in each and passing it to the `PersonConverter` constructor to create an instance.
+The converter class we've defined can now be used from both the Server _and_ the Client SDK. This is done by importing the appropriate `converter` implementation in each and passing it to the `PersonConverter` constructor to create an instance. This will handle the different field type conversions required.
 
 #### firebase.server
 
-Here is an example of creating a firestore client on the server, using the `firebase-admin` SDK, and then using the `PersonConverter`. Not the import of the converter from `firestore-converter/firebase.server`. This is designed to handle the server representation of Firestore data.
+Here is an example of creating a Firestore client on the server, using the `firebase-admin` SDK, and then using the `PersonConverter`. Note the import of the converter from `firestore-converter/firebase.server`. This is designed to handle the server representation of Firestore data.
 
 ```ts
 import { cert, initializeApp } from 'firebase-admin/app'
@@ -146,7 +153,7 @@ export async function getPeople() {
 
 #### firebase
 
-The firestore client on the browser, usinfg the `firebase` SDK is similar. But we now import the converter from `firestore-converter/firebase` instead. This know how to handle the client representation of Firestore data.
+The firestore client on the browser, using the `firebase` SDK is similar. But we now import the converter from `firestore-converter/firebase` instead. This knows how to handle the client representation of Firestore data.
 
 ```ts
 import { initializeApp } from 'firebase/app'
@@ -189,4 +196,4 @@ export async function getPeople() {
 
 ### Result
 
-We can now load and save data easily from both client and server, using a single definition of the data converter class.
+We can now load and save data easily from both client and server, using a single definition of you data converter classes.
