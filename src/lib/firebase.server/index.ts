@@ -35,5 +35,11 @@ export const converter: Converter = {
   },
   toDate(value: Timestamp): Date {
     return value.toDate()
+  },
+  isBinary(value: any): boolean {
+    return value instanceof Buffer
+  },
+  isTimestamp(value: any): boolean {
+    return value instanceof Timestamp
   }
 }

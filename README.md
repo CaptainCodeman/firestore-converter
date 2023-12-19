@@ -197,3 +197,19 @@ export async function getPeople() {
 ### Result
 
 We can now load and save data easily from both client and server, using a single definition of you data converter classes.
+
+### Default Converter
+
+We've provided a `DefaultConverter` that will automatically convert any `Uint8Array` types in your model to and from Firestore `Binary` types, and JavaScript `Date` objects to and from Firestore `Timestamp` fields.
+
+It will automatically iterate all nested objects and arrays (including objects in arrays) so is conovenient but might be less performant than a manually implemented converter, if you have a very large object model with few properties that need converting.
+
+Example of usage:
+
+```ts
+import { DefaultConverter } from 'firestore-converter'
+import { converter } from 'firestore-converter/firebase'
+import { type Person } from './person'
+
+const personConverter = new DefaultConverter<Person>(converter)
+```
