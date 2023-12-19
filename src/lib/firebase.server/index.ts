@@ -30,10 +30,10 @@ export const converter: Converter = {
   toString(value: Uint8Array) {
     return uint8ArrayToString(value)
   },
-  fromDate: function (value: Date): Timestamp {
+  fromDate(value: Date): Timestamp {
     return Timestamp.fromDate(value)
   },
-  toDate: function (value: Timestamp): Date {
+  toDate(value: Timestamp): Date {
     return value.toDate()
   }
 }

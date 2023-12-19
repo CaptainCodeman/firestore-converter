@@ -28,10 +28,10 @@ export const converter: Converter = {
   toString(value: Bytes) {
     return uint8ArrayToString(value.toUint8Array())
   },
-  fromDate: function (value: Date): Timestamp {
+  fromDate(value: Date): Timestamp {
     return Timestamp.fromDate(value)
   },
-  toDate: function (value: Timestamp): Date {
+  toDate(value: Timestamp): Date {
     return value.toDate()
   }
 }
