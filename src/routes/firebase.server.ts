@@ -2,18 +2,13 @@ import { cert, initializeApp } from 'firebase-admin/app'
 import { SERVICE_ACCOUNT_FILE } from '$env/static/private'
 import { getFirestore } from 'firebase-admin/firestore'
 import { PersonConverter, type Person } from './person'
-import { converter, DefaultConverter } from 'firestore-converter/firebase.server'
+import { converter } from 'firestore-converter/firebase.server'
 
 export const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
 
 export const firestore = getFirestore(app)
 
-type Prettify<T> = {
-  [K in keyof T]: T[K];
-} & {};
-
-const personConverter: Prettify<DefaultConverter<Person>> = new DefaultConverter<Person>()
-// const personConverter = new PersonConverter(converter)
+const personConverter = new PersonConverter(converter)
 
 export async function getPeople() {
   const col = firestore.collection('people').withConverter(personConverter)
