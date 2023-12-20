@@ -200,9 +200,38 @@ We can now load and save data easily from both client and server, using a single
 
 ### Default Converters
 
-We've provided a `DefaultConverter` for both Client and Admin that will automatically convert any `Uint8Array` types in your model to and from Firestore `Binary` types, and JavaScript `Date` objects to and from Firestore `Timestamp` fields.
+We've provided a `DefaultConverter` for both Client and Admin that will automatically convert any `Uint8Array` types in your model to and from Firestore `Binary` types, and JavaScript `Date` objects to and from Firestore `Timestamp` fields. It will iterate _all_ nested objects and arrays (including objects inside arrays) so is convenient but _might_ be less performant than a manually implemented converter if you have a very large object model with only a few properties that need converting.
 
-It will automatically iterate all nested objects and arrays (including objects inside arrays) so is convenient but _might_ be less performant than a manually implemented converter if you have a very large object model with only a few properties that need converting.
+`DefaultConverter` accepts an optional object paramater with the following options:
+
+**handle_id**: boolean (default `true`) - whether to remove and restore an objects `id` property (which should be a string) when saving and loading the object. This makes it convenient to have objects with their Firestore ID as a property, without duplicating the ID in the stored data itself. If you _don't_ include the id in the object or want it persisted for some reason, set this to `false`.
+
+**transform**: (id: string) => string (default `id => id`) - a transform to apply to the id when restoring it (after reading from Firestore). If you need to encode the id when saving to Firestore, for example using `encodeURIComponent` to allow a page `slug` to be used as a document ID (which would require special characters such as `/` be encoded to `%2F` for compatibility with Firestore) then you would set the transform to be `decodeURIComponent`. The id encoding is handled outside of the DataConverter due to the design of the Firebase SDKs.
+
+Examples of using the `DefaultConverter` options:
+
+```ts
+interface Order {
+  name: string
+  email: string
+  ordered: Date
+  address: Address
+  lines: OrderLines[]
+}
+
+interface Page {
+  id: string
+  markdown: string
+  html: string
+  tags: string[]
+  created: Date
+  published: Date | null
+  thumbnail: Uint8Array
+}
+
+const orderConverter = new DefaultConverter<Order>({ handle_id: false })
+const pageConverter = new DefaultConverter<Page>({ transform: decodeURIComponent })
+```
 
 Because it is imported from the appropriate `firestore-converter/firebase` or `firestore-converter/firebase.server` module, there is no need to pass in the corresponding converter implementation that would also be imported from the same modules.
 

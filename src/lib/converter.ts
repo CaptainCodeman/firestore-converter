@@ -45,3 +45,36 @@ export function convertValue(convert: Converter, obj: any) {
 
   return obj
 }
+
+export interface DefaultConverterOptions {
+  handle_id?: boolean
+  transform?: (id: string) => string
+}
+
+export abstract class DefaultConverterBase {
+  private readonly handle_id: boolean
+  private readonly transform: (id: string) => string
+
+  constructor(private readonly converter: Converter, options?: DefaultConverterOptions) {
+    this.handle_id = options && options.handle_id || true
+    this.transform = options && options.transform || (id => id)
+  }
+
+  protected toFirestoreDefault<T extends DocumentData>( model: T) {
+    if (this.handle_id) {
+      const { id, ...data } = model
+      return data
+    } else {
+      return model
+    }
+  }
+
+  protected fromFirestoreDefault<T extends DocumentData>(snapshot: QueryDocumentSnapshot<T, DocumentData>) {
+    const data = convertValue(this.converter, snapshot.data())
+
+    return (this.handle_id
+      ? { ...data, id: this.transform(snapshot.id) }
+      : data
+    ) as T
+  }
+}

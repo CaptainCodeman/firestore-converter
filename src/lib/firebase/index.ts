@@ -2,8 +2,8 @@ import { Bytes, Timestamp } from 'firebase/firestore'
 import { uint8ArrayToHex, hexToUint8Array } from 'uint8array-extras'
 import { uint8ArrayToString, stringToUint8Array } from 'uint8array-extras'
 import type { FirestoreDataConverter, DocumentData, WithFieldValue, QueryDocumentSnapshot } from 'firebase/firestore'
-import { convertValue } from "../converter"
-import type { Converter } from "../converter"
+import { DefaultConverterBase  } from "../converter"
+import type { Converter, DefaultConverterOptions } from "../converter"
 
 export const converter: Converter = {
   fromBase64String(value: string) {
@@ -44,15 +44,16 @@ export const converter: Converter = {
   }
 }
 
-export class DefaultConverter<T extends { id: string }> implements FirestoreDataConverter<T, DocumentData>{
+export class DefaultConverter<T extends DocumentData> extends DefaultConverterBase implements FirestoreDataConverter<T, DocumentData>{
+  constructor(options?: DefaultConverterOptions) {
+    super(converter, options)
+  }
+
   toFirestore(model: WithFieldValue<T>): WithFieldValue<DocumentData> {
-    return model as WithFieldValue<DocumentData>
+    return this.toFirestoreDefault(model) as WithFieldValue<DocumentData>
   }
 
   fromFirestore(snapshot: QueryDocumentSnapshot<T, DocumentData>): T {
-    const id = snapshot.id
-    const data = convertValue(converter, snapshot.data())
-
-    return { ...data, id } as T
+    return this.fromFirestoreDefault<T>(snapshot)
   }
 }
