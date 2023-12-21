@@ -5,6 +5,9 @@ import type { FirestoreDataConverter, DocumentData, WithFieldValue, QueryDocumen
 import { DefaultConverterBase  } from "../converter"
 import type { Converter, DefaultConverterOptions } from "../converter"
 
+/**
+ * Defines a Converter implementation for use in the browser, using firebase clientside SDK
+ */
 export const converter: Converter = {
   fromBase64String(value: string) {
     return Bytes.fromBase64String(value)
@@ -44,7 +47,10 @@ export const converter: Converter = {
   }
 }
 
-export class DefaultConverter<T extends DocumentData> extends DefaultConverterBase implements FirestoreDataConverter<T, DocumentData>{
+/**
+ * DefaultConverter for firebase SDK to handle common data type conversions
+ */
+export class DefaultConverter<T extends DocumentData> extends DefaultConverterBase implements FirestoreDataConverter<T, DocumentData> {
   constructor(options?: DefaultConverterOptions) {
     super(converter, options)
   }
