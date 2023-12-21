@@ -29,7 +29,7 @@ export interface Converter {
   isTimestamp(value: any): boolean
 }
 
-export function convertValue(convert: Converter, obj: any) {
+export function convertValue(convert: Converter, obj: DocumentData) {
   for (const prop in obj) {
     const value = obj[prop]
     if (convert.isBinary(value)) {
@@ -37,7 +37,7 @@ export function convertValue(convert: Converter, obj: any) {
     } else if (convert.isTimestamp(value)) {
       obj[prop] = convert.toDate(value)
     } else if (Array.isArray(value)) {
-      value.forEach(convertValue)
+      value.forEach(v => convertValue(convert, v))
     } else if (typeof value === 'object') {
       convertValue(convert, value)
     }
@@ -60,7 +60,7 @@ export abstract class DefaultConverterBase {
     this.transform = options && options.transform || (id => id)
   }
 
-  protected toFirestoreDefault<T extends DocumentData>( model: T) {
+  protected toFirestoreDefault<T extends DocumentData>(model: T) {
     if (this.handle_id) {
       const { id, ...data } = model
       return data
