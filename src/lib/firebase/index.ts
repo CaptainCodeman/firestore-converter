@@ -3,12 +3,12 @@ import { uint8ArrayToHex, hexToUint8Array } from 'uint8array-extras'
 import { uint8ArrayToString, stringToUint8Array } from 'uint8array-extras'
 import type { FirestoreDataConverter, DocumentData, WithFieldValue, QueryDocumentSnapshot } from 'firebase/firestore'
 import { DefaultConverterBase  } from "../converter"
-import type { Converter, DefaultConverterOptions } from "../converter"
+import type { Converter, DefaultConverterOptions, FirestoreDataConverterConstructor } from "../converter"
 
 /**
  * Defines a Converter implementation for use in the browser, using firebase clientside SDK
  */
-export const converter: Converter = {
+const converter: Converter = {
   fromBase64String(value: string) {
     return Bytes.fromBase64String(value)
   },
@@ -45,6 +45,10 @@ export const converter: Converter = {
   isTimestamp(value: any): boolean {
     return value instanceof Timestamp
   }
+}
+
+export function createConverter<T, TDB extends DocumentData>(dataConverter: FirestoreDataConverterConstructor<T, TDB>): FirestoreDataConverter<T, TDB> {
+  return new dataConverter(converter)
 }
 
 /**

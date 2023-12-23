@@ -55,6 +55,25 @@ export interface Converter {
   isTimestamp(value: any): boolean
 }
 
+type Primitive = string | number | boolean | undefined | null
+
+export type WithFieldValue<T> =
+  | T
+  | (T extends Primitive
+    ? T
+    : T extends {}
+    ? { [K in keyof T]: WithFieldValue<T[K]> | any }
+    : never)
+
+export interface FirestoreDataConverterConstructor<T, TDB extends DocumentData> {
+  new(convert: Converter): FirestoreDataConverter<T, TDB>
+}
+
+export interface FirestoreDataConverter<T, TDB extends DocumentData> {
+  toFirestore(modelObject: WithFieldValue<T>): WithFieldValue<TDB>
+  fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>): T
+}
+
 /**
  * Recursively converts Firestore data types in the given object to native
  * JavaScript types using the provided Converter.

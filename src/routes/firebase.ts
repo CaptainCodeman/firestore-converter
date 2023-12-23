@@ -11,7 +11,7 @@ import {
 } from '$env/static/public'
 import { getFirestore, collection, doc, getDoc, setDoc, getDocs } from 'firebase/firestore'
 import { PersonConverter, type Person } from './person'
-import { converter } from 'firestore-converter/firebase'
+import { createConverter } from 'firestore-converter/firebase'
 
 export const app = initializeApp({
   apiKey: PUBLIC_API_KEY,
@@ -26,7 +26,7 @@ export const app = initializeApp({
 
 export const firestore = getFirestore(app)
 
-const personConverter = new PersonConverter(converter)
+const personConverter = createConverter(PersonConverter)
 
 export async function getPeople() {
   const col = collection(firestore, 'people').withConverter(personConverter)
