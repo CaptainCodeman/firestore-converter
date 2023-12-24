@@ -53,16 +53,23 @@ export interface Converter {
   toDate(value: Timestamp): Date
   isBinary(value: any): boolean
   isTimestamp(value: any): boolean
+  arrayRemove(...elements: any[]): FieldValue
+  arrayUnion(...elements: any[]): FieldValue
+  delete(): FieldValue
+  increment(n: number): FieldValue
+  serverTimestamp(): FieldValue
 }
 
 type Primitive = string | number | boolean | undefined | null
+
+type FieldValue = any
 
 export type WithFieldValue<T> =
   | T
   | (T extends Primitive
     ? T
     : T extends {}
-    ? { [K in keyof T]: WithFieldValue<T[K]> | any }
+    ? { [K in keyof T]: WithFieldValue<T[K]> | FieldValue }
     : never)
 
 export interface FirestoreDataConverterConstructor<T, TDB extends DocumentData> {

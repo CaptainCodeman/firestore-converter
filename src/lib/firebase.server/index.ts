@@ -4,6 +4,7 @@ import { uint8ArrayToHex, hexToUint8Array } from 'uint8array-extras'
 import { uint8ArrayToString, stringToUint8Array } from 'uint8array-extras'
 import { toUint8Array } from 'uint8array-extras'
 import type { FirestoreDataConverter, DocumentData, WithFieldValue, QueryDocumentSnapshot } from 'firebase-admin/firestore'
+import { FieldValue } from 'firebase-admin/firestore'
 import { DefaultConverterBase } from "../converter"
 import type { Converter, DefaultConverterOptions, FirestoreDataConverterConstructor } from "../converter"
 
@@ -46,6 +47,21 @@ const converter: Converter = {
   },
   isTimestamp(value: any): boolean {
     return value instanceof Timestamp
+  },
+  arrayRemove(...elements: any[]) {
+    return FieldValue.arrayRemove(elements)
+  },
+  arrayUnion(...elements: any[]) {
+    return FieldValue.arrayUnion(elements)
+  },
+  delete() {
+    return FieldValue.delete()
+  },
+  increment(n: number) {
+    return FieldValue.increment(n)
+  },
+  serverTimestamp() {
+    return FieldValue.serverTimestamp()
   }
 }
 

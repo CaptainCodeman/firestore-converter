@@ -2,6 +2,7 @@ import { Bytes, Timestamp } from 'firebase/firestore'
 import { uint8ArrayToHex, hexToUint8Array } from 'uint8array-extras'
 import { uint8ArrayToString, stringToUint8Array } from 'uint8array-extras'
 import type { FirestoreDataConverter, DocumentData, WithFieldValue, QueryDocumentSnapshot } from 'firebase/firestore'
+import { arrayRemove, arrayUnion, deleteField, increment, serverTimestamp } from 'firebase/firestore'
 import { DefaultConverterBase  } from "../converter"
 import type { Converter, DefaultConverterOptions, FirestoreDataConverterConstructor } from "../converter"
 
@@ -44,6 +45,21 @@ const converter: Converter = {
   },
   isTimestamp(value: any): boolean {
     return value instanceof Timestamp
+  },
+  arrayRemove(...elements: any[]) {
+    return arrayRemove(elements)
+  },
+  arrayUnion(...elements: any[]) {
+    return arrayUnion(elements)
+  },
+  delete() {
+    return deleteField()
+  },
+  increment(n: number) {
+    return increment(n)
+  },
+  serverTimestamp() {
+    return serverTimestamp()
   }
 }
 

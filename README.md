@@ -109,22 +109,29 @@ Likewise you may not want to use the `WithFieldValue<Model>` in the `toFirestore
 
 The `Converter` instance passed in to your Data Converter class provides the following methods all from the perspective of the Object Model. You'll typically be using the `from...` methods in the `toFirestore` method (**from** Object Model, to DB Model) and the `to...` methods in the `fromFirestore` method (**to** Object Model, from DB Model). Personally, I would have make the 'to' and 'from' being to and from the database formats, but the firebase SDKs already used this opposite naming so I've aligned with that to hopefully avoid confusion.
 
-| Method                                        | Description                                          |
-| --------------------------------------------- | ---------------------------------------------------- |
-| **fromBase64String**(value: string): Binary   | Store a Base64 encoded string as a binary field      |
-| **fromUint8Array**(value: Uint8Array): Binary | Store a typed `Uint8Array` as a binary field         |
-| **fromHexString**(value: string): Binary      | Store a hex encoded string as a binary field         |
-| **fromString**(value: string): Binary         | Store a unicode string as a binary field             |
-| **fromDate**(value: Date): Timestamp          | Store a JavaScript Date object as a Timestamp        |
-| **toBase64String**(value: Binary): string     | Convert a binary field to a Base64 encoded string    |
-| **toUInt8Array**(value: Binary): Uint8Array   | Convert a binary field to a typed `Uint8Array`       |
-| **toHexString**(value: Binary): string        | Convert a binary field to a hex encoded string       |
-| **toString**(value: Binary): string           | Convert from a binary field to a unicode string      |
-| **toDate**(value: Timestamp): Date            | Convert from a Timestamp to a JavaScript Date object |
+| Method                                          | Description                                          |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| **fromBase64String**(value: string): Binary     | Store a Base64 encoded string as a binary field      |
+| **fromUint8Array**(value: Uint8Array): Binary   | Store a typed `Uint8Array` as a binary field         |
+| **fromHexString**(value: string): Binary        | Store a hex encoded string as a binary field         |
+| **fromString**(value: string): Binary           | Store a unicode string as a binary field             |
+| **fromDate**(value: Date): Timestamp            | Store a JavaScript Date object as a Timestamp        |
+| **toBase64String**(value: Binary): string       | Convert a binary field to a Base64 encoded string    |
+| **toUInt8Array**(value: Binary): Uint8Array     | Convert a binary field to a typed `Uint8Array`       |
+| **toHexString**(value: Binary): string          | Convert a binary field to a hex encoded string       |
+| **toString**(value: Binary): string             | Convert from a binary field to a unicode string      |
+| **toDate**(value: Timestamp): Date              | Convert from a Timestamp to a JavaScript Date object |
+| **isBinary**(value: any): boolean               | Tests whether a field is a Binary value              |
+| **isTimestamp**(value: any): boolean            | Tests whether a field is a Timestamp value           |
+| **arrayRemove**(...elements: any[]): FieldValue | Returns a sentinel value to remove array elements    |
+| **arrayUnion**(...elements: any[]): FieldValue  | Returns a sentinel value to union array elements     |
+| **delete**()                                    | Returns a sentinel value to delete a field           |
+| **increment**(n: number): FieldValue            | Returns a sentinel value to increment a field        |
+| **serverTimestamp**(): FieldValue               | Returns a sentinel value to set a server timestamp   |
 
 ### Firebase Clients
 
-The converter class we've defined can now be used from both the Server _and_ the Client SDK. This is done by importing the appropriate `converter` implementation in each and passing it to the `PersonConverter` constructor to create an instance. This will handle the different field type conversions required.
+The converter class we've defined can now be used from both the Server _and_ the Client SDK. This is done by importing the appropriate `createConverter` function from each and passing the `PersonConverter` constructor to it to create an instance. This will handle the different field type conversions required.
 
 #### firebase.server
 
