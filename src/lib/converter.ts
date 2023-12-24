@@ -53,6 +53,45 @@ export interface Converter {
   toDate(value: Timestamp): Date
   isBinary(value: any): boolean
   isTimestamp(value: any): boolean
+  arrayRemove(...elements: any[]): FieldValue
+  arrayUnion(...elements: any[]): FieldValue
+  delete(): FieldValue
+  increment(n: number): FieldValue
+  serverTimestamp(): FieldValue
+}
+
+/** Type alias for primitive JavaScript types that can be stored in Firestore. */
+type Primitive = string | number | boolean | undefined | null
+
+/** Type alias for Firestore sentinel values */
+type FieldValue = any
+
+/**
+ * Type alias for wrapping a type T in the Firestore `FieldValue` type.
+ * This allows specifying a type to be converted to a Firestore field
+ * value like Timestamp or Bytes.
+ */
+export type WithFieldValue<T> =
+  | T
+  | (T extends Primitive
+    ? T
+    : T extends {}
+    ? { [K in keyof T]: WithFieldValue<T[K]> | FieldValue }
+    : never)
+
+/**
+ * Interface for a constructor function that creates a FirestoreDataConverter.
+ */
+export interface FirestoreDataConverterConstructor<T, TDB extends DocumentData> {
+  new(convert: Converter): FirestoreDataConverter<T, TDB>
+}
+
+/**
+ * Interface for a FirestoreDataConverter.
+ */
+export interface FirestoreDataConverter<T, TDB extends DocumentData> {
+  toFirestore(modelObject: WithFieldValue<T>): WithFieldValue<TDB>
+  fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>): T
 }
 
 /**

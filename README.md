@@ -33,7 +33,7 @@ import type {
 } from 'firestore-converter'
 ```
 
-Some of these types are just to make it convenient and easy to migrate existing data converter code you may have and avoid having to decide whether you should be importing them from the `firebase/firestore` package or `firebase-admin/firestore`:
+Some of these types are just to make it convenient and easy to migrate existing data converter code you may have and avoid having to decide whether you should be importing them from the `firebase/firestore` package or `firebase-admin/firestore`, others help with making your converter independent of each specific client-side or server-side SDK:
 
 - `FirestoreDataConverter`
 - `WithFieldValue`
@@ -101,7 +101,7 @@ export class PersonConverter implements FirestoreDataConverter<Person, DBPerson>
 }
 ```
 
-You don't _have_ to declare the DB Model though, you can just use the `DocumentData` type in it's place so you only need to define the in memory object model.
+You don't _have_ to declare the DB Model though, you can omit it which will cause it to use the `DocumentData` type in it's place so you only need to define the applications in memory object model.
 
 Likewise you may not want to use the `WithFieldValue<Model>` in the `toFirestore` method which is only required if you'll be making use of [`FieldValue`](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.FieldValue) sentinel types, but require you to cast the model types as in the example above.
 
@@ -109,22 +109,29 @@ Likewise you may not want to use the `WithFieldValue<Model>` in the `toFirestore
 
 The `Converter` instance passed in to your Data Converter class provides the following methods all from the perspective of the Object Model. You'll typically be using the `from...` methods in the `toFirestore` method (**from** Object Model, to DB Model) and the `to...` methods in the `fromFirestore` method (**to** Object Model, from DB Model). Personally, I would have make the 'to' and 'from' being to and from the database formats, but the firebase SDKs already used this opposite naming so I've aligned with that to hopefully avoid confusion.
 
-| Method                                        | Description                                          |
-| --------------------------------------------- | ---------------------------------------------------- |
-| **fromBase64String**(value: string): Binary   | Store a Base64 encoded string as a binary field      |
-| **fromUint8Array**(value: Uint8Array): Binary | Store a typed `Uint8Array` as a binary field         |
-| **fromHexString**(value: string): Binary      | Store a hex encoded string as a binary field         |
-| **fromString**(value: string): Binary         | Store a unicode string as a binary field             |
-| **fromDate**(value: Date): Timestamp          | Store a JavaScript Date object as a Timestamp        |
-| **toBase64String**(value: Binary): string     | Convert a binary field to a Base64 encoded string    |
-| **toUInt8Array**(value: Binary): Uint8Array   | Convert a binary field to a typed `Uint8Array`       |
-| **toHexString**(value: Binary): string        | Convert a binary field to a hex encoded string       |
-| **toString**(value: Binary): string           | Convert from a binary field to a unicode string      |
-| **toDate**(value: Timestamp): Date            | Convert from a Timestamp to a JavaScript Date object |
+| Method                                          | Description                                          |
+| ----------------------------------------------- | ---------------------------------------------------- |
+| **fromBase64String**(value: string): Binary     | Store a Base64 encoded string as a binary field      |
+| **fromUint8Array**(value: Uint8Array): Binary   | Store a typed `Uint8Array` as a binary field         |
+| **fromHexString**(value: string): Binary        | Store a hex encoded string as a binary field         |
+| **fromString**(value: string): Binary           | Store a unicode string as a binary field             |
+| **fromDate**(value: Date): Timestamp            | Store a JavaScript Date object as a Timestamp        |
+| **toBase64String**(value: Binary): string       | Convert a binary field to a Base64 encoded string    |
+| **toUInt8Array**(value: Binary): Uint8Array     | Convert a binary field to a typed `Uint8Array`       |
+| **toHexString**(value: Binary): string          | Convert a binary field to a hex encoded string       |
+| **toString**(value: Binary): string             | Convert from a binary field to a unicode string      |
+| **toDate**(value: Timestamp): Date              | Convert from a Timestamp to a JavaScript Date object |
+| **isBinary**(value: any): boolean               | Tests whether a field is a Binary value              |
+| **isTimestamp**(value: any): boolean            | Tests whether a field is a Timestamp value           |
+| **arrayRemove**(...elements: any[]): FieldValue | Returns a sentinel value to remove array elements    |
+| **arrayUnion**(...elements: any[]): FieldValue  | Returns a sentinel value to union array elements     |
+| **delete**()                                    | Returns a sentinel value to delete a field           |
+| **increment**(n: number): FieldValue            | Returns a sentinel value to increment a field        |
+| **serverTimestamp**(): FieldValue               | Returns a sentinel value to set a server timestamp   |
 
 ### Firebase Clients
 
-The converter class we've defined can now be used from both the Server _and_ the Client SDK. This is done by importing the appropriate `converter` implementation in each and passing it to the `PersonConverter` constructor to create an instance. This will handle the different field type conversions required.
+The converter class we've defined can now be used from both the Server _and_ the Client SDK. This is done by importing the appropriate `createConverter` function from each and passing the `PersonConverter` constructor to it to create an instance. This will handle the different field type conversions required.
 
 #### firebase.server
 
@@ -135,13 +142,13 @@ import { cert, initializeApp } from 'firebase-admin/app'
 import { SERVICE_ACCOUNT_FILE } from '$env/static/private'
 import { getFirestore } from 'firebase-admin/firestore'
 import { PersonConverter, type Person } from './person'
-import { converter } from 'firestore-converter/firebase.server'
+import { createConverter } from 'firestore-converter/firebase.server'
 
-export const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
+const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
 
-export const firestore = getFirestore(app)
+const firestore = getFirestore(app)
 
-const personConverter = new PersonConverter(converter)
+const personConverter = createConverter(PersonConverter)
 
 export async function getPeople() {
   const col = firestore.collection('people').withConverter(personConverter)
@@ -169,9 +176,9 @@ import {
 } from '$env/static/public'
 import { getFirestore, collection, doc, getDoc, setDoc, getDocs } from 'firebase/firestore'
 import { PersonConverter, type Person } from './person'
-import { converter } from 'firestore-converter/firebase'
+import { createConverter } from 'firestore-converter/firebase'
 
-export const app = initializeApp({
+const app = initializeApp({
   apiKey: PUBLIC_API_KEY,
   authDomain: PUBLIC_AUTH_DOMAIN,
   databaseURL: PUBLIC_DATABASE_URL,
@@ -182,9 +189,9 @@ export const app = initializeApp({
   measurementId: PUBLIC_MEASUREMENT_ID,
 })
 
-export const firestore = getFirestore(app)
+const firestore = getFirestore(app)
 
-const personConverter = new PersonConverter(converter)
+const personConverter = createConverter(PersonConverter)
 
 export async function getPeople() {
   const col = collection(firestore, 'people').withConverter(personConverter)
@@ -196,7 +203,7 @@ export async function getPeople() {
 
 ### Result
 
-We can now load and save data easily from both client and server, using a single definition of you data converter classes.
+We can now load and save data easily from both client and server, using a single shared definition of your data converter classes.
 
 ### Default Converters
 
