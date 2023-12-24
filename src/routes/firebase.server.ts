@@ -4,9 +4,10 @@ import { getFirestore } from 'firebase-admin/firestore'
 import { PersonConverter, type Person } from './person'
 import { createConverter } from 'firestore-converter/firebase.server'
 
-export const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
+const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
+const firestore = getFirestore(app)
 
-export const firestore = getFirestore(app)
+// examples of creating and using an instance of PersonConverter from the firebase client-side SDK
 
 const personConverter = createConverter(PersonConverter)
 

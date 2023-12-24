@@ -33,7 +33,7 @@ import type {
 } from 'firestore-converter'
 ```
 
-Some of these types are just to make it convenient and easy to migrate existing data converter code you may have and avoid having to decide whether you should be importing them from the `firebase/firestore` package or `firebase-admin/firestore`:
+Some of these types are just to make it convenient and easy to migrate existing data converter code you may have and avoid having to decide whether you should be importing them from the `firebase/firestore` package or `firebase-admin/firestore`, others help with making your converter independent of each specific client-side or server-side SDK:
 
 - `FirestoreDataConverter`
 - `WithFieldValue`
@@ -101,7 +101,7 @@ export class PersonConverter implements FirestoreDataConverter<Person, DBPerson>
 }
 ```
 
-You don't _have_ to declare the DB Model though, you can just use the `DocumentData` type in it's place so you only need to define the in memory object model.
+You don't _have_ to declare the DB Model though, you can omit it which will cause it to use the `DocumentData` type in it's place so you only need to define the applications in memory object model.
 
 Likewise you may not want to use the `WithFieldValue<Model>` in the `toFirestore` method which is only required if you'll be making use of [`FieldValue`](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.FieldValue) sentinel types, but require you to cast the model types as in the example above.
 
@@ -142,13 +142,13 @@ import { cert, initializeApp } from 'firebase-admin/app'
 import { SERVICE_ACCOUNT_FILE } from '$env/static/private'
 import { getFirestore } from 'firebase-admin/firestore'
 import { PersonConverter, type Person } from './person'
-import { converter } from 'firestore-converter/firebase.server'
+import { createConverter } from 'firestore-converter/firebase.server'
 
-export const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
+const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
 
-export const firestore = getFirestore(app)
+const firestore = getFirestore(app)
 
-const personConverter = new PersonConverter(converter)
+const personConverter = createConverter(PersonConverter)
 
 export async function getPeople() {
   const col = firestore.collection('people').withConverter(personConverter)
@@ -176,9 +176,9 @@ import {
 } from '$env/static/public'
 import { getFirestore, collection, doc, getDoc, setDoc, getDocs } from 'firebase/firestore'
 import { PersonConverter, type Person } from './person'
-import { converter } from 'firestore-converter/firebase'
+import { createConverter } from 'firestore-converter/firebase'
 
-export const app = initializeApp({
+const app = initializeApp({
   apiKey: PUBLIC_API_KEY,
   authDomain: PUBLIC_AUTH_DOMAIN,
   databaseURL: PUBLIC_DATABASE_URL,
@@ -189,9 +189,9 @@ export const app = initializeApp({
   measurementId: PUBLIC_MEASUREMENT_ID,
 })
 
-export const firestore = getFirestore(app)
+const firestore = getFirestore(app)
 
-const personConverter = new PersonConverter(converter)
+const personConverter = createConverter(PersonConverter)
 
 export async function getPeople() {
   const col = collection(firestore, 'people').withConverter(personConverter)
@@ -203,7 +203,7 @@ export async function getPeople() {
 
 ### Result
 
-We can now load and save data easily from both client and server, using a single definition of you data converter classes.
+We can now load and save data easily from both client and server, using a single shared definition of your data converter classes.
 
 ### Default Converters
 

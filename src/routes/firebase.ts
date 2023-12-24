@@ -13,7 +13,7 @@ import { getFirestore, collection, doc, getDoc, setDoc, getDocs } from 'firebase
 import { PersonConverter, type Person } from './person'
 import { createConverter } from 'firestore-converter/firebase'
 
-export const app = initializeApp({
+const app = initializeApp({
   apiKey: PUBLIC_API_KEY,
   authDomain: PUBLIC_AUTH_DOMAIN,
   databaseURL: PUBLIC_DATABASE_URL,
@@ -24,7 +24,9 @@ export const app = initializeApp({
   measurementId: PUBLIC_MEASUREMENT_ID,
 })
 
-export const firestore = getFirestore(app)
+const firestore = getFirestore(app)
+
+// examples of creating and using an instance of PersonConverter from the firebase client-side SDK
 
 const personConverter = createConverter(PersonConverter)
 
