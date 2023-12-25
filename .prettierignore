@@ -1,0 +1,17 @@
+.DS_Store
+node_modules
+/build
+/dist
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+
+# because tabs in readme are fugly with the dumb defaults
+README.md
+
+# Ignore files for PNPM, NPM and YARN
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

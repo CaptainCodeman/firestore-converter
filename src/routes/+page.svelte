@@ -1,30 +1,33 @@
 <script lang="ts">
-  import { getPeople } from './firebase'
+	import { getPeople } from './firebase';
 
-  export let data
+	export let data;
 
-  $: people = data.people
+	$: people = data.people;
 
-  async function load() {
-    people = await getPeople()
-  }
+	async function load() {
+		people = await getPeople();
+	}
 
-  $: console.log(people)
+	$: console.log(people);
 </script>
 
 <button on:click={load}>Load</button>
 
 <ul>
-{#each people as person}
-  <li>
-    <img src={`data:image/jpeg;base64,` + person.photo} alt=''>
-    {person.id} {person.name} {person.dob}
-  </li>
-{/each}
+	{#each people as person}
+		<li>
+			<img src={`data:image/jpeg;base64,` + person.photo} alt="" />
+			{person.id}
+			{person.name}
+			{person.dob}
+		</li>
+	{/each}
 </ul>
 
 <style>
-  img {
-    width: 48px; height: 48px;
-  }
+	img {
+		width: 48px;
+		height: 48px;
+	}
 </style>

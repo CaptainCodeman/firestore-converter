@@ -1,6 +1,6 @@
 # firestore-converter
 
-Google Firestore has a cool and useful ['data converter' system](https://firebase.google.com/docs/reference/js/firestore_.firestoredataconverter?hl=en) that provides a way to define transforms to be used to translate entities between the version persisted to the Firestore database and your in-memory object model of it.
+Google Firestore has a cool and useful ['data converter' system](https://firebase.google.com/docs/reference/js/firestore_.firestoredataconverter?hl=en) that provides a way to define transforms to be used to translate entities between the version persisted to the Firestore database and your applications in-memory object model of it.
 
 Unfortunately, it also has both a client-side `firebase` SDK and a server-side `firebase-admin` SDK, which of course have incompatible `FirestoreDataConverter` interfaces for defining these transforms. This makes defining them awkward.
 
@@ -28,9 +28,14 @@ Import the types from the 'firestore-converter' package that will allow you to d
 
 ```ts
 import type {
-  FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot,
-  Binary, Timestamp, Converter
-} from 'firestore-converter'
+  FirestoreDataConverter,
+  WithFieldValue,
+  DocumentData,
+  QueryDocumentSnapshot,
+  Binary,
+  Timestamp,
+  Adapter
+} from 'firestore-converter';
 ```
 
 Some of these types are just to make it convenient and easy to migrate existing data converter code you may have and avoid having to decide whether you should be importing them from the `firebase/firestore` package or `firebase-admin/firestore`, others help with making your converter independent of each specific client-side or server-side SDK:
@@ -44,7 +49,7 @@ The `Binary` type provides a consistent way to represent binary data in the data
 
 The `Timestamp` likewise represents Firestore Timestamp data in a consistent way, to make it easy to use the conversion functions to translate to and from regular JavaScript Date objects.
 
-Finally, the `Converter` interface provides access to several functions to transform between the various `Timestamp` and `Binary` representations and regular JavaScript Date Objects, `Uint8array` typed arrays, and Base64 or Hex encoded strings.
+Finally, the `Adapter` interface acts as an adapter between the two Firebase SDKs and provides access to several functions to transform between the various `Timestamp` and `Binary` representations and regular JavaScript Date Objects, `Uint8array` typed arrays, and Base64 or Hex encoded strings. It also provides an SDK agnostic way to create the sentinel fields used to update arrays, delete fields and set server timestamps.
 
 ### Object Model and DB Model
 
@@ -56,10 +61,10 @@ First, the in-memory object model. Note that `photo` is a binary value but we wa
 
 ```ts
 export interface Person {
-  id: string
-  name: string
-  dob: Date
-  photo: string // base 64 string
+  id: string;
+  name: string;
+  dob: Date;
+  photo: string; // base 64 string
 }
 ```
 
@@ -67,36 +72,36 @@ The DB model doesn't include the `id` field (which is in the document ref) and s
 
 ```ts
 export interface DBPerson {
-  name: string
-  dob: Timestamp
-  photo: Binary
+  name: string;
+  dob: Timestamp;
+  photo: Binary;
 }
 ```
 
 ### Data Converter Class
 
-Now we define our converter class. This will implement the `FirestoreDataConverter<Model, DBModel>` interface, and accept an instance of the `Converter` in the constructor. The `toFirtestore` method will convert from the in memory object model to the DB model, and the `fromFirestore` method in the opposite direction. Each can make use of the provided `Converter` instance methods to convert the appropriate fields.
+Now we define our converter class. This will implement the `FirestoreDataConverter<Model, DBModel>` interface, and accept an instance of the `Adapter` in the constructor. The `toFirestore` method will convert from the in memory object model to the DB model, and the `fromFirestore` method in the opposite direction. Each can make use of the provided `Adapter` instance methods to transform the appropriate fields.
 
 ```ts
 export class PersonConverter implements FirestoreDataConverter<Person, DBPerson> {
-  constructor(private readonly convert: Converter) {}
+  constructor(private readonly adapter: Adapter) {}
 
   toFirestore(modelObject: WithFieldValue<Person>): WithFieldValue<DBPerson> {
     return {
       name: modelObject.name,
-      dob: this.convert.fromDate(modelObject.dob as Date),
-      photo: this.convert.fromBase64String(modelObject.photo as string),
-    }
+      dob: this.adapter.fromDate(modelObject.dob as Date),
+      photo: this.adapter.fromBase64String(modelObject.photo as string)
+    };
   }
 
   fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>): Person {
-    const person = snapshot.data() as DBPerson
+    const person = snapshot.data() as DBPerson;
     return {
       id: snapshot.id,
       name: person.name,
-      dob: this.convert.toDate(person.dob),
-      photo: this.convert.toBase64String(person.photo),
-    }
+      dob: this.adapter.toDate(person.dob),
+      photo: this.adapter.toBase64String(person.photo)
+    };
   }
 }
 ```
@@ -105,9 +110,9 @@ You don't _have_ to declare the DB Model though, you can omit it which will caus
 
 Likewise you may not want to use the `WithFieldValue<Model>` in the `toFirestore` method which is only required if you'll be making use of [`FieldValue`](https://firebase.google.com/docs/reference/js/v8/firebase.firestore.FieldValue) sentinel types, but require you to cast the model types as in the example above.
 
-### Converter Methods
+### Adapter Methods
 
-The `Converter` instance passed in to your Data Converter class provides the following methods all from the perspective of the Object Model. You'll typically be using the `from...` methods in the `toFirestore` method (**from** Object Model, to DB Model) and the `to...` methods in the `fromFirestore` method (**to** Object Model, from DB Model). Personally, I would have make the 'to' and 'from' being to and from the database formats, but the firebase SDKs already used this opposite naming so I've aligned with that to hopefully avoid confusion.
+The `Adapter` instance passed in to your Data Converter class provides the following methods all from the perspective of the Applications Object Model. You'll typically be using the `from...` methods in the `toFirestore` method (**from** Object Model, to DB Model) and the `to...` methods in the `fromFirestore` method (**to** Object Model, from DB Model). Personally, I would have make the 'to' and 'from' being to and from the database formats, but the firebase SDKs already used this opposite naming so I've aligned with that to hopefully avoid confusion.
 
 | Method                                          | Description                                          |
 | ----------------------------------------------- | ---------------------------------------------------- |
@@ -138,23 +143,23 @@ The converter class we've defined can now be used from both the Server _and_ the
 Here is an example of creating a Firestore client on the server, using the `firebase-admin` SDK, and then using the `PersonConverter`. Note the import of the converter from `firestore-converter/firebase.server`. This is designed to handle the server representation of Firestore data.
 
 ```ts
-import { cert, initializeApp } from 'firebase-admin/app'
-import { SERVICE_ACCOUNT_FILE } from '$env/static/private'
-import { getFirestore } from 'firebase-admin/firestore'
-import { PersonConverter, type Person } from './person'
-import { createConverter } from 'firestore-converter/firebase.server'
+import { cert, initializeApp } from 'firebase-admin/app';
+import { SERVICE_ACCOUNT_FILE } from '$env/static/private';
+import { getFirestore } from 'firebase-admin/firestore';
+import { PersonConverter, type Person } from './person';
+import { createConverter } from 'firestore-converter/firebase.server';
 
-const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
+const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) });
 
-const firestore = getFirestore(app)
+const firestore = getFirestore(app);
 
-const personConverter = createConverter(PersonConverter)
+const personConverter = createConverter(PersonConverter);
 
 export async function getPeople() {
-  const col = firestore.collection('people').withConverter(personConverter)
-  const snap = await col.get()
-  const people = snap.docs.map(doc => doc.data())
-  return people
+  const col = firestore.collection('people').withConverter(personConverter);
+  const snap = await col.get();
+  const people = snap.docs.map((doc) => doc.data());
+  return people;
 }
 ```
 
@@ -163,7 +168,7 @@ export async function getPeople() {
 The firestore client on the browser, using the `firebase` SDK is similar. But we now import the converter from `firestore-converter/firebase` instead. This knows how to handle the client representation of Firestore data.
 
 ```ts
-import { initializeApp } from 'firebase/app'
+import { initializeApp } from 'firebase/app';
 import {
   PUBLIC_API_KEY,
   PUBLIC_AUTH_DOMAIN,
@@ -172,11 +177,11 @@ import {
   PUBLIC_STORAGE_BUCKET,
   PUBLIC_MESSAGE_SENDER_ID,
   PUBLIC_APP_ID,
-  PUBLIC_MEASUREMENT_ID,
-} from '$env/static/public'
-import { getFirestore, collection, doc, getDoc, setDoc, getDocs } from 'firebase/firestore'
-import { PersonConverter, type Person } from './person'
-import { createConverter } from 'firestore-converter/firebase'
+  PUBLIC_MEASUREMENT_ID
+} from '$env/static/public';
+import { getFirestore, collection, doc, getDoc, setDoc, getDocs } from 'firebase/firestore';
+import { PersonConverter, type Person } from './person';
+import { createConverter } from 'firestore-converter/firebase';
 
 const app = initializeApp({
   apiKey: PUBLIC_API_KEY,
@@ -186,18 +191,18 @@ const app = initializeApp({
   storageBucket: PUBLIC_STORAGE_BUCKET,
   messagingSenderId: PUBLIC_MESSAGE_SENDER_ID,
   appId: PUBLIC_APP_ID,
-  measurementId: PUBLIC_MEASUREMENT_ID,
-})
+  measurementId: PUBLIC_MEASUREMENT_ID
+});
 
-const firestore = getFirestore(app)
+const firestore = getFirestore(app);
 
-const personConverter = createConverter(PersonConverter)
+const personConverter = createConverter(PersonConverter);
 
 export async function getPeople() {
-  const col = collection(firestore, 'people').withConverter(personConverter)
-  const snap = await getDocs(col)
-  const people = snap.docs.map(doc => doc.data())
-  return people
+  const col = collection(firestore, 'people').withConverter(personConverter);
+  const snap = await getDocs(col);
+  const people = snap.docs.map((doc) => doc.data());
+  return people;
 }
 ```
 
@@ -219,38 +224,38 @@ Examples of using the `DefaultConverter` options:
 
 ```ts
 interface Order {
-  name: string
-  email: string
-  ordered: Date
-  address: Address
-  lines: OrderLines[]
+  name: string;
+  email: string;
+  ordered: Date;
+  address: Address;
+  lines: OrderLines[];
 }
 
 interface Page {
-  id: string
-  markdown: string
-  html: string
-  tags: string[]
-  created: Date
-  published: Date | null
-  thumbnail: Uint8Array
+  id: string;
+  markdown: string;
+  html: string;
+  tags: string[];
+  created: Date;
+  published: Date | null;
+  thumbnail: Uint8Array;
 }
 
-const orderConverter = new DefaultConverter<Order>({ handle_id: false })
-const pageConverter = new DefaultConverter<Page>({ transform: decodeURIComponent })
+const orderConverter = new DefaultConverter<Order>({ handle_id: false });
+const pageConverter = new DefaultConverter<Page>({ transform: decodeURIComponent });
 ```
 
-Because it is imported from the appropriate `firestore-converter/firebase` or `firestore-converter/firebase.server` module, there is no need to pass in the corresponding converter implementation that would also be imported from the same modules.
+Because it is imported from the appropriate `firestore-converter/firebase` or `firestore-converter/firebase.server` module, there is no need to pass in the corresponding `Adapter` implementation that would also be imported from the same modules - it will automatically use the corresponding one.
 
 #### firebase.server
 
 Within your _server_ code, you would use:
 
 ```ts
-import { DefaultConverter } from 'firestore-converter/firebase.server'
-import { type Person } from './person'
+import { DefaultConverter } from 'firestore-converter/firebase.server';
+import { type Person } from './person';
 
-const personConverter = new DefaultConverter<Person>()
+const personConverter = new DefaultConverter<Person>();
 ```
 
 #### firebase
@@ -258,8 +263,8 @@ const personConverter = new DefaultConverter<Person>()
 Within the _client_ code, you would use:
 
 ```ts
-import { DefaultConverter } from 'firestore-converter/firebase'
-import { type Person } from './person'
+import { DefaultConverter } from 'firestore-converter/firebase';
+import { type Person } from './person';
 
-const personConverter = new DefaultConverter<Person>()
+const personConverter = new DefaultConverter<Person>();
 ```

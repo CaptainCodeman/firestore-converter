@@ -1,1 +1,7 @@
-export type { Binary, Timestamp, Converter, DocumentData, QueryDocumentSnapshot, FirestoreDataConverter, WithFieldValue } from './converter'
+export type { Binary, Timestamp, Adapter } from './adapter';
+export type {
+	DocumentData,
+	QueryDocumentSnapshot,
+	FirestoreDataConverter,
+	WithFieldValue
+} from './converter';
