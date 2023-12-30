@@ -17,7 +17,7 @@ import type { Adapter } from '../adapter';
 /**
  * Defines an Adapter implementation for use in node, using firebase-admin serverside SDK
  */
-const adapter: Adapter = {
+export const adapter: Adapter = {
 	fromBase64String(value: string) {
 		return base64ToUint8Array(value);
 	},

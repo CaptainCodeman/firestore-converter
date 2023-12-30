@@ -21,7 +21,7 @@ import type { Adapter } from '../adapter';
 /**
  * Defines an Adapter implementation for use in the browser, using firebase clientside SDK
  */
-const adapter: Adapter = {
+export const adapter: Adapter = {
 	fromBase64String(value: string) {
 		return Bytes.fromBase64String(value);
 	},
