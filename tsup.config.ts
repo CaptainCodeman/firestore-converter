@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from 'tsup'
 
 export default defineConfig({
 	entry: ['src/lib/index.ts', 'src/lib/firebase/index.ts', 'src/lib/firebase.server/index.ts'],
@@ -9,5 +9,5 @@ export default defineConfig({
 	sourcemap: false,
 	minify: true,
 	clean: true,
-	dts: true
-});
+	dts: true,
+})

@@ -5,22 +5,22 @@ import type {
 	QueryDocumentSnapshot,
 	Binary,
 	Timestamp,
-	Adapter
-} from 'firestore-converter';
+	Adapter,
+} from 'firestore-converter'
 
 /** Person interface represents a person object to the application */
 export interface Person {
-	id: string;
-	name: string;
-	dob: Date;
-	photo: string;
+	id: string
+	name: string
+	dob: Date
+	photo: string
 }
 
 /** DBPerson interface represents a person object as stored in Firestore */
 export interface DBPerson {
-	name: string;
-	dob: Timestamp;
-	photo: Binary;
+	name: string
+	dob: Timestamp
+	photo: Binary
 }
 
 /**
@@ -33,17 +33,17 @@ export class PersonConverter implements FirestoreDataConverter<Person, DBPerson>
 		return {
 			name: modelObject.name,
 			dob: this.adapter.fromDate(modelObject.dob as Date),
-			photo: this.adapter.fromBase64String(modelObject.photo as string)
-		};
+			photo: this.adapter.fromBase64String(modelObject.photo as string),
+		}
 	}
 
 	fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>): Person {
-		const person = snapshot.data() as DBPerson;
+		const person = snapshot.data() as DBPerson
 		return {
 			id: snapshot.id,
 			name: person.name,
 			dob: this.adapter.toDate(person.dob),
-			photo: this.adapter.toBase64String(person.photo)
-		};
+			photo: this.adapter.toBase64String(person.photo),
+		}
 	}
 }

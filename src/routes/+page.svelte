@@ -1,18 +1,15 @@
 <script lang="ts">
-	import { getPeople } from './firebase';
+	import { getPeople } from './firebase'
 
-	export let data;
-
-	$: people = data.people;
+	let { data } = $props()
+	let people = $state(data.people)
 
 	async function load() {
-		people = await getPeople();
+		people = await getPeople()
 	}
-
-	$: console.log(people);
 </script>
 
-<button on:click={load}>Load</button>
+<button onclick={load}>Load</button>
 
 <ul>
 	{#each people as person}
