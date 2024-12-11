@@ -1,7 +1,7 @@
 {
 	"name": "firestore-converter",
 	"description": "Share Firestore Data Converters between Client and Server Firebase SDK",
-	"version": "0.0.15",
+	"version": "0.0.16",
 	"homepage": "https://captaincodeman.github.io/firestore-converter/",
 	"repository": {
 		"type": "git",
@@ -58,7 +58,7 @@
 		"dist"
 	],
 	"peerDependencies": {
-		"firebase": "^12.0.0",
+		"firebase": "^11.0.0",
 		"firebase-admin": "^13.0.0"
 	},
 	"devDependencies": {
