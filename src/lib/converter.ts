@@ -8,13 +8,26 @@ export interface DocumentData {
 	[field: string]: any
 }
 
+export interface CollectionReference<T, TDB extends DocumentData = DocumentData> {
+	get id(): string
+	get path(): string
+	get parent(): DocumentReference<DocumentData, DocumentData> | null
+}
+
+export interface DocumentReference<T, TDB extends DocumentData = DocumentData> {
+	get id(): string
+	get path(): string
+	get parent(): CollectionReference<T, TDB>
+}
+
 /**
  * Interface for a Firestore document snapshot, containing the document
  * ID and data. Allows specifying generic types for the data shape T
  * and internal database format TDB.
  */
-export interface QueryDocumentSnapshot<T, TDB> {
+export interface QueryDocumentSnapshot<T, TDB extends DocumentData = DocumentData> {
 	get id(): string
+	get ref(): DocumentReference<T, TDB>
 	data(): TDB
 }
 

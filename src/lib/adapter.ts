@@ -1,6 +1,6 @@
 import type { Bytes } from 'firebase/firestore'
-import { Timestamp as ClientTimestamp } from 'firebase/firestore'
-import { Timestamp as AdminTimestamp } from 'firebase-admin/firestore'
+import type { Timestamp as ClientTimestamp } from 'firebase/firestore'
+import type { Timestamp as AdminTimestamp } from 'firebase-admin/firestore'
 
 /**
  * Type alias for representing binary data in Firestore. Can be Bytes from
