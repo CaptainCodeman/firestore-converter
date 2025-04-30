@@ -1,30 +1,13 @@
 import { initializeApp } from 'firebase/app'
-import {
-	PUBLIC_API_KEY,
-	PUBLIC_AUTH_DOMAIN,
-	PUBLIC_DATABASE_URL,
-	PUBLIC_PROJECT_ID,
-	PUBLIC_STORAGE_BUCKET,
-	PUBLIC_MESSAGE_SENDER_ID,
-	PUBLIC_APP_ID,
-	PUBLIC_MEASUREMENT_ID,
-} from '$env/static/public'
-import { getFirestore, collection, doc, getDoc, setDoc, getDocs } from 'firebase/firestore'
+import { getFirestore, collection, doc, getDoc, setDoc, getDocs, connectFirestoreEmulator } from 'firebase/firestore'
 import { PersonConverter, type Person } from './person'
 import { createConverter } from 'firestore-converter/firebase'
 
-const app = initializeApp({
-	apiKey: PUBLIC_API_KEY,
-	authDomain: PUBLIC_AUTH_DOMAIN,
-	databaseURL: PUBLIC_DATABASE_URL,
-	projectId: PUBLIC_PROJECT_ID,
-	storageBucket: PUBLIC_STORAGE_BUCKET,
-	messagingSenderId: PUBLIC_MESSAGE_SENDER_ID,
-	appId: PUBLIC_APP_ID,
-	measurementId: PUBLIC_MEASUREMENT_ID,
-})
+const app = initializeApp({ projectId: 'demo-converter' })
 
 const firestore = getFirestore(app)
+
+connectFirestoreEmulator(firestore, 'localhost', 8080)
 
 // examples of creating and using an instance of PersonConverter from the firebase client-side SDK
 

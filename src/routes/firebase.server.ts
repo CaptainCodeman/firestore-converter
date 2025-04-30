@@ -1,10 +1,11 @@
-import { cert, initializeApp } from 'firebase-admin/app'
-import { SERVICE_ACCOUNT_FILE } from '$env/static/private'
+import { initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import { PersonConverter, type Person } from './person'
 import { createConverter } from 'firestore-converter/firebase.server'
 
-const app = initializeApp({ credential: cert(SERVICE_ACCOUNT_FILE) })
+process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080'
+
+const app = initializeApp({ projectId: 'demo-converter' })
 const firestore = getFirestore(app)
 
 // examples of creating and using an instance of PersonConverter from the firebase client-side SDK

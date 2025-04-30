@@ -1,0 +1,19 @@
+{
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+	"emulators": {
+		"firestore": {
+			"port": 8080,
+			"host": "localhost",
+			"websocketPort": 9150
+		},
+		"ui": {
+			"enabled": true,
+			"port": 4000,
+			"host": "localhost"
+		},
+		"singleProjectMode": true
+	}
+}
