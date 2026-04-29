@@ -12,7 +12,7 @@ import type {
 import { FieldValue } from 'firebase-admin/firestore'
 import { DefaultConverterBase } from '../converter'
 import type { DefaultConverterOptions, FirestoreDataConverterConstructor } from '../converter'
-import type { Adapter } from '../adapter'
+import type { Adapter, SnapshotOptions } from '../adapter'
 
 /**
  * Defines an Adapter implementation for use in node, using firebase-admin serverside SDK
@@ -49,16 +49,16 @@ export const adapter: Adapter = {
 		return value.toDate()
 	},
 	isBinary(value: any): boolean {
-		return value instanceof Buffer
+		return value instanceof Uint8Array
 	},
 	isTimestamp(value: any): boolean {
 		return value instanceof Timestamp
 	},
 	arrayRemove(...elements: any[]) {
-		return FieldValue.arrayRemove(elements)
+		return FieldValue.arrayRemove(...elements)
 	},
 	arrayUnion(...elements: any[]) {
-		return FieldValue.arrayUnion(elements)
+		return FieldValue.arrayUnion(...elements)
 	},
 	delete() {
 		return FieldValue.delete()
@@ -71,7 +71,7 @@ export const adapter: Adapter = {
 	},
 }
 
-export function createConverter<T extends DocumentData, TDB extends DocumentData>(
+export function createConverter<T, TDB extends DocumentData>(
 	converter: FirestoreDataConverterConstructor<T, TDB>
 ): FirestoreDataConverter<T, TDB> {
 	return new converter(adapter)
@@ -80,7 +80,7 @@ export function createConverter<T extends DocumentData, TDB extends DocumentData
 /**
  * DefaultConverter for firebase-admin SDK to handle common data type conversions
  */
-export class DefaultConverter<T extends DocumentData>
+export class DefaultConverter<T>
 	extends DefaultConverterBase<T>
 	implements FirestoreDataConverter<T, DocumentData>
 {
@@ -92,7 +92,10 @@ export class DefaultConverter<T extends DocumentData>
 		return super.toFirestore(model) as WithFieldValue<DocumentData>
 	}
 
-	fromFirestore(snapshot: QueryDocumentSnapshot<T, DocumentData>): T {
-		return super.fromFirestore(snapshot)
+	fromFirestore(
+		snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>,
+		options?: SnapshotOptions
+	): T {
+		return super.fromFirestore(snapshot, options)
 	}
 }

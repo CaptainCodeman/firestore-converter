@@ -6,6 +6,7 @@ import type {
 	DocumentData,
 	WithFieldValue,
 	QueryDocumentSnapshot,
+	SnapshotOptions,
 } from 'firebase/firestore'
 import {
 	arrayRemove,
@@ -59,10 +60,10 @@ export const adapter: Adapter = {
 		return value instanceof Timestamp
 	},
 	arrayRemove(...elements: any[]) {
-		return arrayRemove(elements)
+		return arrayRemove(...elements)
 	},
 	arrayUnion(...elements: any[]) {
-		return arrayUnion(elements)
+		return arrayUnion(...elements)
 	},
 	delete() {
 		return deleteField()
@@ -84,7 +85,7 @@ export function createConverter<T, TDB extends DocumentData>(
 /**
  * DefaultConverter for firebase SDK to handle common data type conversions
  */
-export class DefaultConverter<T extends DocumentData>
+export class DefaultConverter<T>
 	extends DefaultConverterBase<T>
 	implements FirestoreDataConverter<T, DocumentData>
 {
@@ -96,7 +97,10 @@ export class DefaultConverter<T extends DocumentData>
 		return super.toFirestore(model) as WithFieldValue<DocumentData>
 	}
 
-	fromFirestore(snapshot: QueryDocumentSnapshot<T, DocumentData>): T {
-		return super.fromFirestore(snapshot)
+	fromFirestore(
+		snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>,
+		options?: SnapshotOptions
+	): T {
+		return super.fromFirestore(snapshot, options)
 	}
 }

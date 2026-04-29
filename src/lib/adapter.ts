@@ -1,6 +1,14 @@
 import type { Bytes } from 'firebase/firestore'
-import type { Timestamp as ClientTimestamp } from 'firebase/firestore'
-import type { Timestamp as AdminTimestamp } from 'firebase-admin/firestore'
+import type {
+	Timestamp as ClientTimestamp,
+	FieldPath as ClientFieldPath,
+	FieldValue as ClientFieldValue,
+} from 'firebase/firestore'
+import type {
+	Timestamp as AdminTimestamp,
+	FieldPath as AdminFieldPath,
+	FieldValue as AdminFieldValue,
+} from 'firebase-admin/firestore'
 
 /**
  * Type alias for representing binary data in Firestore. Can be Bytes from
@@ -15,8 +23,19 @@ export type Binary = Bytes | Uint8Array
  */
 export type Timestamp = ClientTimestamp | AdminTimestamp
 
-/** Type alias for Firestore sentinel values */
-export type FieldValue = any
+/**
+ * Type alias for a Firestore FieldPath value. Can represent either
+ * a FieldPath from the client SDK or admin SDK. Allows writing
+ * code that works with both.
+ */
+export type FieldPath = ClientFieldPath | AdminFieldPath
+
+/** Type alias for Firestore sentinel values, Can represent either
+ * a FieldValue from the client SDK or admin SDK. Allows writing
+ * code that works with both. */
+export type FieldValue = ClientFieldValue | AdminFieldValue
+
+export type { SnapshotOptions } from 'firebase/firestore'
 
 /**
  * Exports the Adapter interface which defines methods for converting

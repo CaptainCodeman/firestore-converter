@@ -2,7 +2,7 @@
 	import { getPeople } from './firebase'
 
 	let { data } = $props()
-	let people = $state(data.people)
+	let people = $derived(data.people)
 
 	async function load() {
 		people = await getPeople()

@@ -1,5 +1,13 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, doc, getDoc, setDoc, getDocs, connectFirestoreEmulator } from 'firebase/firestore'
+import {
+	getFirestore,
+	collection,
+	doc,
+	getDoc,
+	setDoc,
+	getDocs,
+	connectFirestoreEmulator,
+} from 'firebase/firestore'
 import { PersonConverter, type Person } from './person'
 import { createConverter } from 'firestore-converter/firebase'
 

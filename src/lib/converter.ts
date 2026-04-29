@@ -1,4 +1,4 @@
-import type { Adapter, FieldValue } from './adapter'
+import type { Adapter, FieldPath, FieldValue, SnapshotOptions } from './adapter'
 
 /**
  * The DocumentData interface defines the structure of a Firestore document.
@@ -28,7 +28,7 @@ export interface DocumentReference<T, TDB extends DocumentData = DocumentData> {
 export interface QueryDocumentSnapshot<T, TDB extends DocumentData = DocumentData> {
 	get id(): string
 	get ref(): DocumentReference<T, TDB>
-	data(): TDB
+	data(options?: SnapshotOptions): TDB
 }
 
 /** Type alias for primitive JavaScript types that can be stored in Firestore. */
@@ -48,6 +48,26 @@ export type WithFieldValue<T> =
 				: never)
 
 /**
+ * Similar to Typescript's `Partial<T>`, but allows nested fields to be
+ * omitted and FieldValues to be passed in as property values.
+ */
+export type PartialWithFieldValue<T> =
+	| Partial<T>
+	| (T extends Primitive
+			? T
+			: T extends {}
+				? { [K in keyof T]?: PartialWithFieldValue<T[K]> | FieldValue }
+				: never)
+
+export type SetOptions =
+	| {
+			readonly merge?: boolean
+	  }
+	| {
+			readonly mergeFields?: Array<string | FieldPath>
+	  }
+
+/**
  * Interface for a constructor function that creates a FirestoreDataConverter.
  */
 export interface FirestoreDataConverterConstructor<T, TDB extends DocumentData = DocumentData> {
@@ -59,7 +79,14 @@ export interface FirestoreDataConverterConstructor<T, TDB extends DocumentData =
  */
 export interface FirestoreDataConverter<T, TDB extends DocumentData = DocumentData> {
 	toFirestore(modelObject: WithFieldValue<T>): WithFieldValue<TDB>
-	fromFirestore(snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>): T
+	toFirestore(
+		modelObject: PartialWithFieldValue<T>,
+		options: SetOptions
+	): PartialWithFieldValue<TDB>
+	fromFirestore(
+		snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>,
+		options?: SnapshotOptions
+	): T
 }
 
 /**
@@ -95,9 +122,7 @@ export interface DefaultConverterOptions {
  * Defines an abstract base class for converters that handle
  * default behavior like transforming IDs.
  */
-export abstract class DefaultConverterBase<T extends DocumentData>
-	implements FirestoreDataConverter<T, DocumentData>
-{
+export abstract class DefaultConverterBase<T> implements FirestoreDataConverter<T, DocumentData> {
 	private readonly handle_id: boolean
 	private readonly transform: (id: string) => string
 
@@ -111,15 +136,18 @@ export abstract class DefaultConverterBase<T extends DocumentData>
 
 	toFirestore(model: WithFieldValue<T>): WithFieldValue<DocumentData> {
 		if (this.handle_id) {
-			const { id, ...data } = model
+			const { id, ...data } = model as any
 			return data
 		} else {
-			return model
+			return model as any
 		}
 	}
 
-	fromFirestore(snapshot: QueryDocumentSnapshot<T, DocumentData>) {
-		const data = convertValue(this.adapter, snapshot.data())
+	fromFirestore(
+		snapshot: QueryDocumentSnapshot<DocumentData, DocumentData>,
+		options?: SnapshotOptions
+	) {
+		const data = convertValue(this.adapter, snapshot.data(options))
 
 		return (this.handle_id ? { ...data, id: this.transform(snapshot.id) } : data) as T
 	}
