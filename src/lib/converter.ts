@@ -44,7 +44,7 @@ export type WithFieldValue<T> =
 	| (T extends Primitive
 			? T
 			: T extends {}
-				? { [K in keyof T]: WithFieldValue<T[K]> | FieldValue }
+				? { [K in keyof T]: T[K] extends Function ? T[K] : FieldValue | WithFieldValue<T[K]> }
 				: never)
 
 /**

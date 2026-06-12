@@ -94,7 +94,7 @@ export class DefaultConverter<T>
 	}
 
 	toFirestore(model: WithFieldValue<T>): WithFieldValue<DocumentData> {
-		return super.toFirestore(model) as WithFieldValue<DocumentData>
+		return super.toFirestore(model as any) as WithFieldValue<DocumentData>
 	}
 
 	fromFirestore(
